@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 import logging
+import math
 import os
 from typing import List, Optional, Set, Tuple
 
@@ -449,7 +450,16 @@ class StartPosCentricPlayerMap(PlayerMapInterface):
         
         touching_door_freq_candidates = self._get_freq_candidates_usecase(touching_door_coord, touching_door_type)
 
-        return [door_freq_candidates, touching_door_freq_candidates]
+        wall_freq_candidates = [door_freq_candidates, touching_door_freq_candidates]
+        # find LCM of two lists
+        def lcm(a, b):
+            if a==0 or b==0:
+                return 0
+            return abs(a * b) // math.gcd(a, b)
+
+        return [lcm(f1, f2) for f1 in door_freq_candidates for f2 in touching_door_freq_candidates]
+
+        # return [door_freq_candidates, touching_door_freq_candidates]
 
     def get_freq_candidates(self, door_id: DoorIdentifier) -> Set[int]:
         return self._get_freq_candidates_usecase(door_id.absolute_coord, door_id.door_type)
