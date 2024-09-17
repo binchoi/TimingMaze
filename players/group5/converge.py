@@ -22,14 +22,15 @@ def converge(current_pos : list, goal : list, turn : int, player_map: PlayerMapI
 
 def dyjkstra(current_pos : list, goal : list, turn : int, player_map: PlayerMapInterface) -> list:
 
-	turn_candidates = [turn]
+	# turn_candidates = [turn]
+	expected_turn = turn
 
-	print("Turn Candidates: ", turn_candidates)
+	print("Turn Candidates: ", expected_turn)
 	print("Current Position: ", current_pos)
 
 	# Create a priority queue
 	queue = []
-	heapq.heappush(queue, (0, current_pos, turn_candidates))
+	heapq.heappush(queue, (0, current_pos, expected_turn))
 
 
 	# Create a dictionary to store the cost of each position
@@ -42,18 +43,18 @@ def dyjkstra(current_pos : list, goal : list, turn : int, player_map: PlayerMapI
 	paths = {tuple(current_pos): []}
 
 	# Create a dictionary to store the turns for each position
-	turns = {tuple(current_pos): turn_candidates}
+	turns = {tuple(current_pos): expected_turn}
 
 	# While there are positions to explore
 	while queue:
 		print("Starting while loop...")
 
 		# Get the position with the lowest cost
-		current_cost, current_pos, turn_candidates  = heapq.heappop(queue)
+		current_cost, current_pos, expected_turn  = heapq.heappop(queue)
 
 		print("Current Cost: ", current_cost)
 		print("Current Position: ", current_pos)
-		print("Turn Candidates: ", turn_candidates)
+		# print("Turn Candidates: ", turn_candidates)
 
 		# If we have reached the goal, return the path
 		if current_pos == goal:
@@ -89,78 +90,80 @@ def dyjkstra(current_pos : list, goal : list, turn : int, player_map: PlayerMapI
 
 			# Calculate the cost of the neighbor
 			# TODO make a special function that calculates based on observations of wall intervals
-			weight, new_turn_candidates = add_weight(current_pos, neighbor, player_map.get_wall_freq_candidates(door), turn_candidates)
+			weight, new_expected_turn = add_weight(current_pos, neighbor, player_map.get_wall_freq_candidates(door), expected_turn)
 			new_cost = current_cost + weight
 
 			print("Weight: ", weight)
 			print("New Cost: ", new_cost)
-			print("New Turn Candidates: ", new_turn_candidates)
+			print("New Expected Turn: ", new_expected_turn)
 
 			# If the neighbor has not been visited or the new cost is lower, update the cost and add it to the queue
 			if tuple(neighbor) not in visited and (tuple(neighbor) not in costs or new_cost < costs[tuple(neighbor)]):
 				costs[tuple(neighbor)] = new_cost
 				paths[tuple(neighbor)] = paths[tuple(current_pos)] + [move]
-				heapq.heappush(queue, (new_cost, neighbor, new_turn_candidates))
+				heapq.heappush(queue, (new_cost, neighbor, new_expected_turn))
 
 	# If we reach here, it means we could not find a path to the goal
 	return None
 
-def add_weight(start_pos, end_pos, wall_frequency_candidates, turn_candidates) -> Tuple[float, List[int]]:
+def add_weight(start_pos, end_pos, wall_frequency_candidates, expected_turn) -> Tuple[float, int]:
 	# calculates the likelihood of doors being open and average wait expected
 
 	# if wall is always closed, return infinity
 	if all(freq == 0 for freq in wall_frequency_candidates):
 		print("Wall is always closed.")
-		return float('inf'), [i + 1 for i in turn_candidates]
+		return float('inf'), 1 + expected_turn
 	
 	if start_pos == end_pos:
 		print("Start position is the same as end position.")
-		return 1, [i + 1 for i in turn_candidates]
+		return 1, 1 + expected_turn
 	
 	cost = 0
 
 	print("Wall Frequency Candidates: ", wall_frequency_candidates)
-	print("Turn Candidates: ", turn_candidates)
+	# print("Turn Candidates: ", turn_candidates)
 
 	q = 0
 
 	for i in wall_frequency_candidates:
-		for j in turn_candidates:
-				# if j == float('inf'):
-				# 	continue
-				if i == 0:
-					print("Wall is always closed. 2")
-					cost = float('inf')
-				else:
-					print("Calculating cost...")
-					cost += i - (j % i)
-				
-				q += 1
+		# for j in turn_candidates:
+		
+		# if j == float('inf'):
+		# 	continue
+		if i == 0:
+			print("Wall is always closed. 2")
+			cost = float('inf')
+		else:
+			print("Calculating cost...")
+			cost += i - (expected_turn % i)
+		
+		q += 1
 
-				if q == 1000:
-					print("Cost: ", cost)
+		if q == 1000:
+			print("Cost: ", cost)
 	
 	cost /= len(wall_frequency_candidates)
-	cost /= len(turn_candidates)
+	# cost /= len(turn_candidates)
 
 	cost += 1 # Add a base cost for moving
 		
-	new_turn_candidates = []
+	# new_turn_candidates = []
+	new_expected_turn = 0
 
 	# if wall is always open, return 1
 	
-	for turn in turn_candidates:
-		for freq in wall_frequency_candidates:
-			if freq == 0:
-				print("Wall is always closed. 3")
-				continue
-				# new_turn_candidates.append(float('inf'))
-			else:
-				print("Calculating new turn candidates...")
-				new_turn_candidates.append(turn + 1 + freq - (turn % freq))
+	# for turn in turn_candidates:
+	for freq in wall_frequency_candidates:
+		if freq == 0:
+			print("Wall is always closed. 3")
+			continue
+			# new_turn_candidates.append(float('inf'))
+		else:
+			print("Calculating new turn candidates...")
+			new_expected_turn += expected_turn + 1 + freq - (expected_turn % freq)
+		new_expected_turn = int(new_expected_turn / len(wall_frequency_candidates))
 
-
-	return cost, new_turn_candidates
+	return cost, expected_turn
 
 
 
