@@ -50,6 +50,17 @@ class PlayerMapInterface(ABC):
         pass
 
     @abstractmethod
+    def get_wall_freq_candidates(self, door_id: DoorIdentifier) -> List[Set[int]]:
+        """Function which returns the frequency candidates for the given door and its touching door (i.e., collectively called a wall)
+
+            Args:
+                door_id (DoorIdentifier): DoorIdentifier object containing the relative coordinates and door type
+            Returns:
+                List[int]: List containing the door frequency candidates for the given door and its touching door (2nd element is the touching door)
+        """
+        pass
+
+    @abstractmethod
     def update_map(self, turn_num: int, percept: TimingMazeState):  # TODO: check type of maze_state
         """Function which updates the map with the given maze state
 
@@ -219,6 +230,9 @@ class SimplePlayerCentricMap(PlayerMapInterface):
         # Not implemented
         pass
 
+    def get_wall_freq_candidates(self, door_id: DoorIdentifier) -> List[Set[int]]:
+        # Not implemented
+        pass
 
 """
 StartPosCentricPlayerMap is similar to SimplePlayerCentricMap but is not centric on the user's current position but rather the first start position which we assign to a constant coordinate (i.e., it receives/outputs start position-centric coordinate data). 
@@ -431,4 +445,21 @@ class StartPosCentricPlayerMap(PlayerMapInterface):
                 valid_moves.append(move)
         return valid_moves
 
+    def get_wall_freq_candidates(self, door_id: DoorIdentifier) -> List[Set[int]]:
+        door_freq_candidates = self._get_freq_candidates_usecase(door_id.absolute_coord, door_id.door_type)
+        
+        door_type_to_touching_door_offsets = {
+            constants.LEFT: ([0, -1], constants.RIGHT),
+            constants.UP: ([-1, 0], constants.DOWN),
+            constants.RIGHT: ([0, 1], constants.LEFT),
+            constants.DOWN: ([1, 0], constants.UP),
+        }
+        touching_door_offset, touching_door_type = door_type_to_touching_door_offsets[door_id.door_type]
+        touching_door_coord = [door_id.absolute_coord[0] + touching_door_offset[0], door_id.absolute_coord[1] + touching_door_offset[1]]
+        
+        touching_door_freq_candidates = self._get_freq_candidates_usecase(touching_door_coord, touching_door_type)
 
+        return [door_freq_candidates, touching_door_freq_candidates]
+
+    def get_freq_candidates(self, door_id: DoorIdentifier) -> Set[int]:
+        return self._get_freq_candidates_usecase(door_id.absolute_coord, door_id.door_type)
