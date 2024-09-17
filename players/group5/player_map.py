@@ -335,7 +335,7 @@ class StartPosCentricPlayerMap(PlayerMapInterface):
         self._update_cur_pos([percept.start_x, percept.start_y])
 
         cells_seen = set()
-        # before = self._door_freqs.copy()
+        before = self._door_freqs.copy()
         for door in percept.maze_state:
             player_relative_coordinates, door_type, door_state = door[:2], door[2], door[3]
             coord = self._get_map_coordinates(player_relative_coordinates)
@@ -356,9 +356,9 @@ class StartPosCentricPlayerMap(PlayerMapInterface):
             self.update_door_status(coord, door_type, door_state)
 
         # validation log 
-        # after = self._door_freqs
-        # diff = {k: (before[k], after[k]) for k in before if before[k] != after[k]}
-        # self.logger.debug(f"Diff after turn {turn_num}: {diff}")
+        after = self._door_freqs
+        diff = {k: (before[k], after[k]) for k in before if before[k] != after[k]}
+        self.logger.debug(f"Diff after turn {turn_num}: {diff}")
 
         # update seen count
         for cell in cells_seen:
