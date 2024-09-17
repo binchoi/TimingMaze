@@ -93,8 +93,8 @@ class G5_Player:
             valid_moves = self.player_map.get_valid_moves(self.turns)
             self.logger.debug(f"Valid moves: {valid_moves}")
 
-            example_freq_set = self.player_map.get_wall_freq_candidates(door_id=DoorIdentifier(absolute_coord=cur_pos, door_type=0))
-            self.logger.debug(f"Example freq set for coordinate {cur_pos}: {example_freq_set}")
+            # example_freq_set = self.player_map.get_wall_freq_candidates(door_id=DoorIdentifier(absolute_coord=cur_pos, door_type=0))
+            # self.logger.debug(f"Example freq set for coordinate {cur_pos}: {example_freq_set}")
 
             exists, end_pos = self.player_map.get_end_pos_if_known()
             if not exists:
