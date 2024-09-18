@@ -75,3 +75,6 @@ class G5_Player:
             self.logger.debug(e, e.with_traceback)
             return constants.WAIT
 
+    def simple_search(self):
+        return simple_search(self.player_map, self.radius)
+
