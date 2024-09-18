@@ -69,6 +69,7 @@ class G5_Player:
                 move = self.simple_search()
                 return move if move in valid_moves else constants.WAIT  # TODO: this is if-statement is to demonstrate valid_moves is correct (@eylam, replace with actual logic)
             move = converge(self.player_map.get_cur_pos(), end_pos, self.turns, self.player_map)
+            return move
             return move if move in valid_moves else constants.WAIT
         except Exception as e:
             self.logger.debug(e, e.with_traceback)
