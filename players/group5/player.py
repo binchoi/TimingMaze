@@ -72,23 +72,23 @@ class G5_Player:
         # max_indices = [i for i, j in enumerate(curiosity) if j == max_curiosity]
 
         near_discovered_counts = [
-            (2 * self.radius) ** 2 - self.player_map.get_discovered_counts([[cur_pos_i - self.radius * 3 + i, cur_pos_j - self.radius + j] for j in range(self.radius * 2) for i in range(self.radius * 2)]),
-            (2 * self.radius) ** 2 - self.player_map.get_discovered_counts([[cur_pos_i - self.radius + i, cur_pos_j - self.radius * 3 + j] for j in range(self.radius * 2) for i in range(self.radius * 2)]),
-            (2 * self.radius) ** 2 - self.player_map.get_discovered_counts([[cur_pos_i + self.radius + i + 1, cur_pos_j - self.radius + j] for j in range(self.radius * 2) for i in range(self.radius * 2)]),
-            (2 * self.radius) ** 2 - self.player_map.get_discovered_counts([[cur_pos_i - self.radius + i, cur_pos_j + self.radius + j + 1] for j in range(self.radius * 2) for i in range(self.radius * 2)])
+            self.player_map.get_unseen_counts([[cur_pos_i - self.radius * 3 + i, cur_pos_j - self.radius + j] for j in range(self.radius * 2) for i in range(self.radius * 2)]),
+            self.player_map.get_unseen_counts([[cur_pos_i - self.radius + i, cur_pos_j - self.radius * 3 + j] for j in range(self.radius * 2) for i in range(self.radius * 2)]),
+            self.player_map.get_unseen_counts([[cur_pos_i + self.radius + i + 1, cur_pos_j - self.radius + j] for j in range(self.radius * 2) for i in range(self.radius * 2)]),
+            self.player_map.get_unseen_counts([[cur_pos_i - self.radius + i, cur_pos_j + self.radius + j + 1] for j in range(self.radius * 2) for i in range(self.radius * 2)])
         ]
         
         far_discovered_counts = [
-            200 ** 2 - self.player_map.get_discovered_counts([[cur_pos_i - 300 + i, cur_pos_j - 100 + j] for j in range(200) for i in range(200)]),
-            200 ** 2 - self.player_map.get_discovered_counts([[cur_pos_i - 100 + i, cur_pos_j - 300 + j] for j in range(200) for i in range(200)]),
-            200 ** 2 - self.player_map.get_discovered_counts([[cur_pos_i + 100 + i + 1, cur_pos_j - 100 + j] for j in range(200) for i in range(200)]),
-            200 ** 2 - self.player_map.get_discovered_counts([[cur_pos_i - 100 + i, cur_pos_j + 100 + j + 1] for j in range(200) for i in range(200)])
+            self.player_map.get_unseen_counts([[cur_pos_i - 200 + i, cur_pos_j - 100 + j] for j in range(200) for i in range(200)]),
+            self.player_map.get_unseen_counts([[cur_pos_i - 100 + i, cur_pos_j - 200 + j] for j in range(200) for i in range(200)]),
+            self.player_map.get_unseen_counts([[cur_pos_i + i + 1, cur_pos_j - 100 + j] for j in range(200) for i in range(200)]),
+            self.player_map.get_unseen_counts([[cur_pos_i - 100 + i, cur_pos_j + j + 1] for j in range(200) for i in range(200)])
         ]
 
         weighted_counts = [near_discovered_counts[i] / self.radius**2 + far_discovered_counts[i] / 100**2 for i in range(4)]
 
-        print('Near discovered counts:', near_discovered_counts)
-        print('Far discovered counts:', far_discovered_counts)
+        print('Near undiscovered counts:', near_discovered_counts)
+        print('Far undiscovered counts:', far_discovered_counts)
         print('Weighted counts:', weighted_counts)
         
         best_direction = max(weighted_counts)
