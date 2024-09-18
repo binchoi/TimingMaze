@@ -6,7 +6,8 @@ import constants
 from players.group5.door import DoorIdentifier
 from players.group5.player_map import PlayerMapInterface, SimplePlayerCentricMap, StartPosCentricPlayerMap
 from timing_maze_state import TimingMazeState
-from players.group5.converge import converge_basic, converge
+from players.group5.converge import converge
+from players.group5.simple_search import simple_search
 
 
 class G5_Player:
@@ -139,11 +140,11 @@ class G5_Player:
             # self.logger.debug(f"Example freq set for coordinate {cur_pos}: {example_freq_set}")
 
             exists, end_pos = self.player_map.get_end_pos_if_known()
-            move = converge(self.player_map.get_cur_pos(), end_pos) if exists else self.simple_search()
-            
+            if not exists:
+                return self.simple_search()
+            move = converge(self.player_map.get_cur_pos(), end_pos)
             self.last_move = move
             self.last_pos = cur_pos
-
             return move if move in valid_moves else constants.WAIT
         except Exception as e:
             self.logger.debug(e, e.with_traceback)
