@@ -68,7 +68,7 @@ class G5_Player:
             if not exists:
                 move = self.simple_search()
                 return move if move in valid_moves else constants.WAIT  # TODO: this is if-statement is to demonstrate valid_moves is correct (@eylam, replace with actual logic)
-            move = converge(self.player_map.get_cur_pos(), end_pos, self.turns, self.player_map)
+            move = converge(self.player_map.get_cur_pos(), [end_pos], self.turns, self.player_map, self.maximum_door_frequency)
             return move
             return move if move in valid_moves else constants.WAIT
         except Exception as e:
