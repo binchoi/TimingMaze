@@ -8,7 +8,6 @@ from typing import List, Optional, Set, Tuple
 from players.group5.player_map import PlayerMapInterface, SimplePlayerCentricMap, StartPosCentricPlayerMap
 from players.group5.door import DoorIdentifier
 
-
 def converge(current_pos : list, goal : list[list[int]], turn : int, player_map: PlayerMapInterface, max_door_frequency) -> int:
 
 	path = dyjkstra(current_pos, goal, turn, player_map,  max_door_frequency)
@@ -17,7 +16,6 @@ def converge(current_pos : list, goal : list[list[int]], turn : int, player_map:
 	print("Direction: ", path[0])
 
 	return path[0] if path else None
-
 
 def dyjkstra(current_pos : list, goal : list[list[int]], turn : int, player_map: PlayerMapInterface,  max_door_frequency) -> list:
 
@@ -44,6 +42,7 @@ def dyjkstra(current_pos : list, goal : list[list[int]], turn : int, player_map:
 
 		# If we have reached the goal, return the path
 		if current_pos in goal:
+      
 			return paths[tuple(current_pos)]
 
 		# If we have already visited this position, skip it
@@ -106,6 +105,7 @@ def dyjkstra(current_pos : list, goal : list[list[int]], turn : int, player_map:
 	return 0
 
 def calculate_weighted_average(current_turn, candidates, max_door_frequency):
+
     """
     Calculate a weighted average cost for traversing a door based on the current turn
     and the candidate turns when the door might open. Also return the expected turn.
@@ -144,3 +144,4 @@ def calculate_weighted_average(current_turn, candidates, max_door_frequency):
 
 def expected_turn_cands():
 	pass
+
