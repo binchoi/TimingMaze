@@ -1,4 +1,6 @@
 import os
+import random
+from typing import List
 import numpy as np
 import logging
 
@@ -154,3 +156,33 @@ class G5_Player:
 
     def simple_search(self):
         return simple_search(self.player_map, self.radius)
+
+
+# ENUM representing player state
+class PlayerState:
+    SEARCH = 0
+    CONVERGE = 1
+
+
+# SEARCH SPECIFIC FIELDS
+class SearchStrategy:
+    def __init__(self, player_map: PlayerMapInterface, turns: int) -> None:
+        self.player_map = player_map
+        self.start_turn = turns
+        self.corridors = []
+        # self.current_corridor = None TODO: might not need if corridor[0] is the current corridor
+
+    def move(self, current_percept: TimingMazeState) -> int:
+        pass
+
+
+class G5_Player_Refactored:
+    def __init__(self, rng: np.random.Generator, logger: logging.Logger, precomp_dir: str, maximum_door_frequency: int, radius: int, boundaries: List[int]) -> None:
+        self.player_state = PlayerState.SEARCH
+        self.corridors = []
+        self.global_boundaries = boundaries
+
+        pass
+
+    def move(self, current_percept: TimingMazeState) -> int:
+        pass
