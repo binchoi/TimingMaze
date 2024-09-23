@@ -17,10 +17,12 @@ class ConvergeStrategy:
 		self.max_door_frequency = max_door_frequency
 	
 	def move(self) -> int:
-		path = dyjkstra(self.cur_pos, self.goal, self.turn, self.player_map,  self.max_door_frequency)
+		path = dyjkstra(self.cur_pos, self.goal, self.turn - 1, self.player_map,  self.max_door_frequency)
 
-		print("path: ", path)
-		print("Direction: ", path[0])
+		# print("Turn", self.turn)
+
+		# print("path: ", path)
+		# print("Direction: ", path[0])
 
 		return path[0] if path else None
 
@@ -92,13 +94,19 @@ def dyjkstra(current_pos : list, goal : list[list[int]], turn : int, player_map:
 			# TODO make a special function that calculates based on observations of wall intervals
 			# weight, new_expected_turn = add_weight(current_pos, neighbor, player_map.get_wall_freq_candidates(door), expected_turn)
 
-			print("current_pos: ", current_pos)
-			print("neighbor: ", neighbor)
-			print("door: ", door)
 
 			weight, new_expected_turn = calculate_weighted_average(expected_turn, player_map.get_wall_freq_candidates(door), max_door_frequency)
 
-			print ("weight: ", weight)
+
+
+			# print("ALERT: ", player_map.get_wall_freq_candidates(DoorIdentifier(
+			# 		absolute_coord=[10, 6],
+			# 		door_type=constants.UP,
+			# 	)))
+
+			# print("End Alert")
+
+			# print("current_pos: ", current_pos, "neighbor: ", neighbor, "door: ", door, "weight: ", weight, "new_expected_turn: ", new_expected_turn)
 
 			if weight == 1e20:
 				# print("SKIPPED MOVE: ", move)
@@ -139,7 +147,7 @@ def calculate_weighted_average(current_turn, candidates, max_door_frequency):
     - expected_turn (int): The next expected turn when the door will open.
     """
 
-    print(candidates)
+    # print(candidates)
 
     if all(candidate == 0 for candidate in candidates):
         return 1e20, current_turn + 1e20
@@ -159,5 +167,6 @@ def calculate_weighted_average(current_turn, candidates, max_door_frequency):
 
 
     avg_distance /= len(candidates)
+    # print("current turn: ", current_turn, "avg_distance: ", avg_distance)
 
     return avg_distance, round(avg_distance) + current_turn
