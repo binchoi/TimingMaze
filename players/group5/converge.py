@@ -2,20 +2,28 @@ import heapq
 import logging
 import math
 from os import system
+from typing import List
 import constants
-from typing import List, Optional, Set, Tuple
 
-from players.group5.player_map import PlayerMapInterface, SimplePlayerCentricMap, StartPosCentricPlayerMap
+from players.group5.player_map import PlayerMapInterface
 from players.group5.door import DoorIdentifier
 
-def converge(current_pos : list, goal : list[list[int]], turn : int, player_map: PlayerMapInterface, max_door_frequency) -> int:
+class ConvergeStrategy:
+	def __init__(self, cur_pos: List[int], goal: List[List[int]], turn: int, player_map: PlayerMapInterface, max_door_frequency: int) -> int:
+		self.cur_pos = cur_pos
+		self.goal = goal
+		self.turn = turn
+		self.player_map = player_map
+		self.max_door_frequency = max_door_frequency
+	
+	def move(self) -> int:
+		path = dyjkstra(self.cur_pos, self.goal, self.turn, self.player_map,  self.max_door_frequency)
 
-	path = dyjkstra(current_pos, goal, turn, player_map,  max_door_frequency)
+		print("path: ", path)
+		print("Direction: ", path[0])
 
-	print("path: ", path)
-	print("Direction: ", path[0])
+		return path[0] if path else None
 
-	return path[0] if path else None
 
 def dyjkstra(current_pos : list, goal : list[list[int]], turn : int, player_map: PlayerMapInterface,  max_door_frequency) -> list:
 
@@ -57,16 +65,28 @@ def dyjkstra(current_pos : list, goal : list[list[int]], turn : int, player_map:
 
 			if move == constants.LEFT:
 				neighbor = [current_pos[0] - 1, current_pos[1]]
-				door = DoorIdentifier([current_pos[0], current_pos[1]], constants.LEFT)
+				door = DoorIdentifier(
+					absolute_coord=[current_pos[0], current_pos[1]],
+					door_type=constants.LEFT,
+				)
 			elif move == constants.UP:
 				neighbor = [current_pos[0], current_pos[1] - 1]
-				door = DoorIdentifier([current_pos[0], current_pos[1]], constants.UP)
+				door = DoorIdentifier(
+					absolute_coord=[current_pos[0], current_pos[1]], 
+					door_type=constants.UP,
+				)
 			elif move == constants.RIGHT:
 				neighbor = [current_pos[0] + 1, current_pos[1]]
-				door = DoorIdentifier([current_pos[0], current_pos[1]], constants.RIGHT)
+				door = DoorIdentifier(
+					absolute_coord=[current_pos[0], current_pos[1]], 
+					door_type=constants.RIGHT,
+				)
 			elif move == constants.DOWN:
 				neighbor = [current_pos[0], current_pos[1] + 1]
-				door = DoorIdentifier([current_pos[0], current_pos[1]], constants.DOWN)
+				door = DoorIdentifier(
+					absolute_coord=[current_pos[0], current_pos[1]], 
+					door_type=constants.DOWN,
+				)
 
 			# Calculate the cost of the neighbor
 			# TODO make a special function that calculates based on observations of wall intervals
@@ -141,7 +161,3 @@ def calculate_weighted_average(current_turn, candidates, max_door_frequency):
     avg_distance /= len(candidates)
 
     return avg_distance, round(avg_distance) + current_turn
-
-def expected_turn_cands():
-	pass
-
