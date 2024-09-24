@@ -82,6 +82,24 @@ class SearchStrategy:
         self.traversed_corridors: List[Corridor] = []
         # self.current_corridor = None TODO: might not need if corridor[0] is the current corridor
 
+    
+
+    def print_corridors(self) -> None:
+        if not self.corridors:
+            self.logger.debug("No corridors available.")
+            print("No corridors available.")
+            return
+
+        print("Current Corridors:")
+        for i, corridor in enumerate(self.corridors):
+            # print(f"Current Position: {self.player_map.get_cur_pos()}:")
+            print(f"Corridor {i + 1}:")
+            print(f"  Boundaries: {corridor.boundaries}")
+            print(f"  Direction: {corridor.direction}")
+            print(f"  Start Indices: {corridor.start_indices}")
+            print(f"  End Indices: {corridor.end_indices}")
+
+    
     def _setup_logger(self, logger):
         return setup_file_logger(logger, self.__class__.__name__, "./log")
 
@@ -93,6 +111,7 @@ class SearchStrategy:
         
         if self.stage == SearchStage.TRAVERSE_CORRIDORS:
             move = self.traverse_corridors(turn)
+            self.print_corridors()
             self.logger.debug(f"Traversed corridors move: {move}")
             if move == -100:
                 if len(self.traversed_corridors) == 1 and len(self.corridors) == 0:
@@ -121,6 +140,7 @@ class SearchStrategy:
         return target
 
     def go_to_edge(self, turn: int) -> int:
+        print("GOING TO EDGE")
         self._g2e_targets = self._get_g2e_targets()
         cur_pos = self.player_map.get_cur_pos()
 
@@ -138,10 +158,11 @@ class SearchStrategy:
 
         path = dyjkstra(cur_pos, self._g2e_targets, turn, self.player_map, self.max_door_frequency)
         # print("path: ", path)
-        print("Direction: ", path[0]) if path else None
+        print("Going in Direction: ", path[0]) if path else print("(No path to edge)")
         return path[0] if path else None
     
     def get_first_corridor(self) -> Corridor:
+        print("--getting first corridor--")
         cur_pos = self.player_map.get_cur_pos()
         boundaries = self.player_map.get_boundaries()
         
@@ -260,6 +281,9 @@ class SearchStrategy:
         
     
     def traverse_corridors(self, turn: int) -> int:
+        
+        print("TRAVERSING CORRIDORS")
+
         cur_pos = self.player_map.get_cur_pos()
 
         # self.logger.debug(f"지금 제일 위에 있는 건: {self.corridors[0].boundaries}, {self.corridors[0].direction=}, {self.corridors[0].start_indices=}, {self.corridors[0].end_indices=}") if self.corridors else None
@@ -285,13 +309,18 @@ class SearchStrategy:
 
         corridor_map = copy.copy(self.player_map)
         corridor_map.set_boundaries(current_corridor.boundaries)
+
+        # start_indices_list = [int(x) for x in ]
+        start_indices_list = [[int(x) for x in inner_list] for inner_list in current_corridor.start_indices]
         
-        if cur_pos in current_corridor.start_indices:
+        if cur_pos in start_indices_list:
             current_corridor.reached_start_indices = True
 
         if not current_corridor.reached_start_indices:
-            path = dyjkstra(cur_pos, current_corridor.start_indices, turn, corridor_map, self.max_door_frequency)
+            print("Going to start indices", start_indices_list)
+            path = dyjkstra(cur_pos, start_indices_list, turn, self.player_map, self.max_door_frequency)
             if not path:
+                print("No path to start indices")
                 self.logger.debug(f"No path from {cur_pos} to {current_corridor.start_indices}")
             return path[0] if path else None
 
@@ -306,7 +335,10 @@ class SearchStrategy:
             return -1  # TODO: currently wasting a turn. make it iterative above to avoid this
 
         path = dyjkstra(cur_pos, current_corridor.end_indices, turn, corridor_map, self.max_door_frequency)
-        # if not path:
+        if not path:
+            print("No path to end indices. Sad :(")
+            print(f"Current Position: {cur_pos}:") 
+            print(f"End Indices: {current_corridor.end_indices}")
             # self.logger.debug(f"AHA 여기구2 {cur_pos} {current_corridor.start_indices}")
         return path[0] if path else None
 
@@ -387,5 +419,6 @@ COUNTERCLOCKWISE_ORDER = [constants.RIGHT, constants.UP, constants.LEFT, constan
 
 def next_direction(is_clockwise: bool, current_direction: int) -> int:
     order = CLOCKWISE_ORDER if is_clockwise else COUNTERCLOCKWISE_ORDER
+    # order = COUNTERCLOCKWISE_ORDER if is_clockwise else CLOCKWISE_ORDER
     idx = order.index(current_direction)
     return order[(idx + 1) % 4]
