@@ -19,14 +19,5 @@ def get_updated_frequency_candidates(candidates: Set[int], turn_num: int, door_s
     if door_state == constants.OPEN:
         candidates.discard(0)
     
-
-    invalidated = set()
-    for c in candidates:
-        if c == 0:
-            continue
-
-        should_be_open, is_open = (turn_num % c == 0), (door_state == constants.OPEN)  # TODO: check this logic
-        if should_be_open != is_open:
-            invalidated.add(c)
-        
+    invalidated = {c for c in candidates if c != 0 and (turn_num % c == 0) != (door_state == constants.OPEN)}
     return candidates - invalidated

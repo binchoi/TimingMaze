@@ -145,11 +145,10 @@ class SearchStrategy:
             target.append([x, bottom_edge_targets_y_idx])
         for y in range(top_edge_targets_y_idx, bottom_edge_targets_y_idx + 1):
             target.append([left_edge_targets_x_idx, y])
-            target.append([right_edge_targets_x_idx, y])
+            target.append([right_edge_targets_x_idx, y])        
         return target
 
     def go_to_edge(self, turn: int) -> int:
-        print("GOING TO EDGE")
         self._g2e_targets = self._get_g2e_targets()
         cur_pos = self.player_map.get_cur_pos()
 
@@ -159,6 +158,7 @@ class SearchStrategy:
             # first_corridor = self.get_first_corridor()
             # self.corridors.append(first_corridor)
             self.stage = SearchStage.TRAVERSE_CORRIDORS
+            print("GOT TO EDGE!!!!!!!!!!!")
             return -100
 
         self.logger.debug(f"edge targets: {self._g2e_targets}")
