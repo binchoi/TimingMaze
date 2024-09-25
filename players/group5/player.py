@@ -59,7 +59,7 @@ class G5_Player:
             if self.search_strategy is None:
                 self.search_strategy = SearchStrategy(self.player_map, self.radius, self.maximum_door_frequency, self.logger)
             
-            return self.search_strategy.move(current_percept, self.turns)
+            return self.search_strategy.move(self.turns)
         except Exception as e:
             self.logger.debug(e, e.with_traceback)
             return constants.WAIT
