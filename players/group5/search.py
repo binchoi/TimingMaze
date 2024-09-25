@@ -429,12 +429,20 @@ class SearchStrategy:
                 [
                     boundaries[constants.LEFT], 
                     boundaries[constants.UP], 
-                    boundaries[constants.RIGHT], 
+                    boundaries[constants.LEFT] + (boundaries[constants.RIGHT] - boundaries[constants.LEFT])//2, 
                     boundaries[constants.DOWN],
                 ],
                 constants.RIGHT,
             ))
-
+            self.corridors.append(Corridor(
+                [
+                    boundaries[constants.LEFT] + (boundaries[constants.RIGHT] - boundaries[constants.LEFT])//2 + 1,
+                    boundaries[constants.UP], 
+                    boundaries[constants.RIGHT], 
+                    boundaries[constants.DOWN],
+                ],
+                constants.LEFT,
+            ))
 
         self.logger.debug(f"Corridors: {self.corridors}; {len(self.corridors)}")
         for corridor in self.corridors:
