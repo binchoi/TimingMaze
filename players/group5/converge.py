@@ -5,7 +5,7 @@ import constants
 from players.group5.player_map import PlayerMapInterface
 from players.group5.door import DoorIdentifier
 
-# consts
+
 DOOR_CLOSED_WEIGHT = 1e20
 
 
@@ -121,7 +121,7 @@ def calculate_weighted_average(current_turn, candidates, max_door_frequency):
     - expected_turn (int): The next expected turn when the door will open.
     """
     if all(candidate == 0 for candidate in candidates):
-        return 1e20, current_turn + 1e20
+        return DOOR_CLOSED_WEIGHT, current_turn + DOOR_CLOSED_WEIGHT
 
     avg_distance = 0
 	

@@ -6,10 +6,8 @@ import constants
 from typing import List, Tuple
 
 from players.group5.converge import dyjkstra
-from players.group5.door import DoorIdentifier
 from players.group5.player_map import PlayerMapInterface
 from players.group5.util import setup_file_logger
-from timing_maze_state import TimingMazeState
 
 
 class SearchStage:
@@ -159,7 +157,6 @@ class SearchStrategy:
         return path[0] if path else None
     
     def get_first_corridor(self) -> Corridor:
-        print("--getting first corridor--")
         cur_pos = self.player_map.get_cur_pos()
         boundaries = self.player_map.get_boundaries()
         
@@ -178,10 +175,8 @@ class SearchStrategy:
         elif cur_pos[1] == bottom_edge_y_idx:
             my_edge = constants.DOWN
 
-        #  determine direction to move towards
         if my_edge in {constants.LEFT, constants.RIGHT}:
             if boundaries[constants.DOWN] - cur_pos[1] >= cur_pos[1] - boundaries[constants.UP]:
-                # move up. this is clockwise if my_edge is left, anticlockwise if my_edge is right
                 self.rotation_direction = RotationDirection.CLOCKWISE if my_edge == constants.LEFT else RotationDirection.COUNTERCLOCKWISE
 
                 if my_edge == constants.LEFT:
@@ -280,7 +275,6 @@ class SearchStrategy:
             constants.RIGHT,
         )
         
-    
     def traverse_corridors(self, turn: int) -> int:
         if self.is_detouring:
             return self.detour(turn)
@@ -335,7 +329,6 @@ class SearchStrategy:
 
         prev_corridor = self.traversed_corridors[-1]
         prev_dir = prev_corridor.direction
-        # while distance from boundary edge to edge is more than 2*radius
         while boundaries[constants.RIGHT] - boundaries[constants.LEFT] > 2*self.radius:
             additional_corridors = {
                 constants.RIGHT if self.rotation_direction == RotationDirection.CLOCKWISE else constants.LEFT: Corridor(
@@ -375,12 +368,11 @@ class SearchStrategy:
                     constants.UP if self.rotation_direction == RotationDirection.CLOCKWISE else constants.DOWN,
                 ),
             }
-            for i in range(4):
+            for _ in range(4):
                 nxt_dir = next_direction(self.rotation_direction == RotationDirection.CLOCKWISE, prev_dir)
                 self.corridors.append(additional_corridors[nxt_dir])
                 prev_dir = nxt_dir
             
-            # break
             boundaries = [
                 boundaries[constants.LEFT] + self.radius * self.search_speed_coefficient,
                 boundaries[constants.UP] + self.radius * self.search_speed_coefficient,
@@ -388,25 +380,18 @@ class SearchStrategy:
                 boundaries[constants.DOWN] - self.radius * self.search_speed_coefficient,
             ]
         
-        self.logger.debug(f"Corridors: {self.corridors}; {len(self.corridors)}")
-        for corridor in self.corridors:
-            self.logger.debug(f"Corridor: {corridor.boundaries}; {corridor.direction} {corridor.start_indices=} {corridor.end_indices}->")
-
         return self.corridors
     
     def detour(self, turn: int) -> int:
         cur_pos = self.player_map.get_cur_pos()
         path = dyjkstra(cur_pos, self.detour_target, turn, self.player_map, self.max_door_frequency)
 
-    
         if cur_pos in self.detour_target:
             self.is_detouring = False
 
         if path:
             return path[0]
-        else:
-            print("No path in detour")
-            return None
+        return None
 
 
 """
