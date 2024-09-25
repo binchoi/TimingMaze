@@ -99,7 +99,18 @@ class PlayerMapInterface(ABC):
         """
         pass
 
-# TODO: check this
+    @abstractmethod
+    def is_boundary_found(self, dir: int) -> bool:
+        """Function which returns if the boundary in the given direction is found
+
+            Args:
+                dir (int): Integer representing the direction of the boundary (i,e., left, up, right, down)
+            Returns:
+                bool: Boolean indicating if the boundary is found
+        """
+        pass
+
+
 def default_freq_candidates(max_door_frequency: int):
     # generate a set of door frequencies from 0 to max_door_frequency
     return lambda: set(range(max_door_frequency+1))
@@ -175,7 +186,7 @@ class StartPosCentricPlayerMap(PlayerMapInterface):
         key = self._door_dictkey(map_coords=coord, door_type=door_type)
         self._door_freqs[key] = freq_candidates
     
-    def _is_boundary_found(self, dir: int) -> bool:
+    def is_boundary_found(self, dir: int) -> bool:
         BOUNDARY_NOT_FOUND_VALUES = {-1, self._GLOBAL_MAP_LEN}
         return self._boundaries[dir] not in BOUNDARY_NOT_FOUND_VALUES
 
@@ -224,7 +235,7 @@ class StartPosCentricPlayerMap(PlayerMapInterface):
 
             # update boundaries if newly found
             # self.logger.debug(f"boundary found!!!") if door_state == constants.BOUNDARY and door_type == constants.UP else None
-            if door_state == constants.BOUNDARY and not self._is_boundary_found(door_type):
+            if door_state == constants.BOUNDARY and not self.is_boundary_found(door_type):
                 self._update_boundaries(door_type, coord)
                 # self.logger.debug(f"Boundaries updated: {self._boundaries}")
 

@@ -122,8 +122,8 @@ class SearchStrategy:
         if self.stage == SearchStage.TRAVERSE_CORRIDORS:
             move = self.traverse_corridors(turn)
             if move == SearchStrategy.NO_CORRIDORS_SIGNAL:
-                if len(self.traversed_corridors) == 1 and len(self.corridors) == 0:
-                    self.corridors = self.create_corridors()  # TODO: rename
+                if len(self.traversed_corridors) <= 1 and len(self.corridors) == 0:
+                    self.corridors = self.create_corridors()
             return move
 
         raise Exception("Invalid stage")
@@ -131,10 +131,11 @@ class SearchStrategy:
     def _get_g2e_targets(self) -> List[List[int]]:
         boundaries = self.player_map.get_boundaries()
         
-        left_edge_targets_x_idx = boundaries[constants.LEFT] + (self.search_speed_coefficient * self.radius - 1)
-        right_edge_targets_x_idx = boundaries[constants.RIGHT] - (self.search_speed_coefficient * self.radius - 1)
-        top_edge_targets_y_idx = boundaries[constants.UP] + (self.search_speed_coefficient * self.radius - 1)
-        bottom_edge_targets_y_idx = boundaries[constants.DOWN] - (self.search_speed_coefficient * self.radius - 1)
+        edge_buffer = self.radius - 1
+        left_edge_targets_x_idx = boundaries[constants.LEFT] + edge_buffer
+        right_edge_targets_x_idx = boundaries[constants.RIGHT] - edge_buffer
+        top_edge_targets_y_idx = boundaries[constants.UP] + edge_buffer
+        bottom_edge_targets_y_idx = boundaries[constants.DOWN] - edge_buffer
 
         target = []
         for x in range(left_edge_targets_x_idx, right_edge_targets_x_idx + 1):
@@ -150,20 +151,11 @@ class SearchStrategy:
         cur_pos = self.player_map.get_cur_pos()
 
         # Check completion of G2E stage
-        if cur_pos in self._g2e_targets:
-            # create first corridor (best estimate corridor)
-            # first_corridor = self.get_first_corridor()
-            # self.corridors.append(first_corridor)
+        if cur_pos in self._g2e_targets or (self.player_map.is_boundary_found(constants.UP) and self.player_map.is_boundary_found(constants.LEFT)):
             self.stage = SearchStage.TRAVERSE_CORRIDORS
-            return -100
-
-        self.logger.debug(f"edge targets: {self._g2e_targets}")
-        
-        self.logger.debug(f"found edge {self.player_map.get_boundaries()}")
+            return SearchStrategy.G2E_STAGE_COMPLETE_SIGNAL
 
         path = dyjkstra(cur_pos, self._g2e_targets, turn, self.player_map, self.max_door_frequency)
-        # print("path: ", path)
-        print("Going in Direction: ", path[0]) if path else print("(No path to edge)")
         return path[0] if path else None
     
     def get_first_corridor(self) -> Corridor:
@@ -283,6 +275,10 @@ class SearchStrategy:
                         ], 
                         constants.LEFT,
                     )
+        return Corridor(
+            [boundaries[constants.LEFT], boundaries[constants.UP], boundaries[constants.RIGHT], boundaries[constants.DOWN]], 
+            constants.RIGHT,
+        )
         
     
     def traverse_corridors(self, turn: int) -> int:
@@ -336,7 +332,6 @@ class SearchStrategy:
 
     def create_corridors(self) -> List[Corridor]:
         boundaries = self.player_map.get_boundaries()
-        self.logger.debug(f"====boundaries: {boundaries}")
 
         prev_corridor = self.traversed_corridors[-1]
         prev_dir = prev_corridor.direction
@@ -392,7 +387,6 @@ class SearchStrategy:
                 boundaries[constants.RIGHT] - self.radius * self.search_speed_coefficient,
                 boundaries[constants.DOWN] - self.radius * self.search_speed_coefficient,
             ]
-            # self.logger.debug(f"boundaries: {boundaries}")
         
         self.logger.debug(f"Corridors: {self.corridors}; {len(self.corridors)}")
         for corridor in self.corridors:
