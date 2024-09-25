@@ -78,6 +78,7 @@ class Corridor:
 class SearchStrategy:
     MINIMUM_SEARCH_SPEED_COEFFICIENT = 1
     G2E_STAGE_COMPLETE_SIGNAL = -100
+    NO_CORRIDORS_SIGNAL = -200
 
     def __init__(self, player_map: PlayerMapInterface, radius: int, max_door_frequency: int, logger: logging.Logger) -> None:
         self.logger = self._setup_logger(logger)
@@ -94,7 +95,7 @@ class SearchStrategy:
         self.corridors: List[Corridor] = []
         self.traversed_corridors: List[Corridor] = []
 
-        self.detouring = False
+        self.is_detouring = False
         self.detour_target = None
 
         self.search_speed_coefficient = SearchStrategy.MINIMUM_SEARCH_SPEED_COEFFICIENT
@@ -120,7 +121,7 @@ class SearchStrategy:
         
         if self.stage == SearchStage.TRAVERSE_CORRIDORS:
             move = self.traverse_corridors(turn)
-            if move == -100:
+            if move == SearchStrategy.NO_CORRIDORS_SIGNAL:
                 if len(self.traversed_corridors) == 1 and len(self.corridors) == 0:
                     self.corridors = self.create_corridors()  # TODO: rename
             return move
@@ -285,22 +286,15 @@ class SearchStrategy:
         
     
     def traverse_corridors(self, turn: int) -> int:
-
-        if self.detouring:
+        if self.is_detouring:
             return self.detour(turn)
-        
-        print("TRAVERSING CORRIDORS")
-
+    
         cur_pos = self.player_map.get_cur_pos()
-
-        # self.logger.debug(f"지금 제일 위에 있는 건: {self.corridors[0].boundaries}, {self.corridors[0].direction=}, {self.corridors[0].start_indices=}, {self.corridors[0].end_indices=}") if self.corridors else None
-        
         if not self.first_corridor_traversed:
             if self.corridors == []:
                 fst_corridor = self.get_first_corridor()
                 self.corridors.append(fst_corridor)
 
-            # self.logger.debug(f"map's boundaries: {self.player_map.get_boundaries()}")
             self.corridors[0].update_with_boundaries([
                 max(self.player_map.get_boundaries()[constants.LEFT], self.corridors[0].boundaries[constants.LEFT]),
                 max(self.player_map.get_boundaries()[constants.UP], self.corridors[0].boundaries[constants.UP]),
@@ -309,54 +303,33 @@ class SearchStrategy:
             ])
 
         if self.corridors == []:
-            self.logger.debug(f"Corridors empty")
-            return -100  # TODO: handle better
+            return SearchStrategy.NO_CORRIDORS_SIGNAL
         
         current_corridor = self.corridors[0]
 
         corridor_map = copy.copy(self.player_map)
         corridor_map.set_boundaries(current_corridor.boundaries)
 
-        # start_indices_list = [int(x) for x in ]
         start_indices_list = [[int(x) for x in inner_list] for inner_list in current_corridor.start_indices]
         
         if cur_pos in start_indices_list:
             current_corridor.reached_start_indices = True
 
         if not current_corridor.reached_start_indices:
-            print("Going to start indices", start_indices_list)
             path = dyjkstra(cur_pos, start_indices_list, turn, self.player_map, self.max_door_frequency)
-            if not path:
-                print("No path to start indices")
-                self.logger.debug(f"No path from {cur_pos} to {current_corridor.start_indices}")
             return path[0] if path else None
 
-        # self.logger.debug(f"Traversing endings {current_corridor.end_indices}; cur_pos: {cur_pos}")
         if cur_pos in current_corridor.end_indices:
             self.first_corridor_traversed = True
-            self.logger.debug(f"We finished a corridor {current_corridor.end_indices} because we reached {cur_pos}")
             self.traversed_corridors.append(self.corridors.pop(0))
-            # self.logger.debug(f"curr_ corridors : {self.corridors}")
             if self.corridors == []:
-                return -100  # TODO: signal done
-            return -1  # TODO: currently wasting a turn. make it iterative above to avoid this
+                return SearchStrategy.NO_CORRIDORS_SIGNAL
+            return constants.WAIT  # gather info about cells in path to next corridor; could remove for quicker traversal
 
         path = dyjkstra(cur_pos, current_corridor.end_indices, turn, corridor_map, self.max_door_frequency)
         if not path:
-
-            self.detouring = True
-
-            if current_corridor.direction == constants.LEFT:
-                self.detour_target = [[cur_pos[0]-1, cur_pos[1]]]
-            elif current_corridor.direction == constants.RIGHT:
-                self.detour_target = [[cur_pos[0]+1, cur_pos[1]]]
-            elif current_corridor.direction == constants.UP:    
-                self.detour_target = [[cur_pos[0], cur_pos[1]-1]]
-            elif current_corridor.direction == constants.DOWN:
-                self.detour_target = [[cur_pos[0], cur_pos[1]+1]]
-
-            print("--detouring to ", self.detour_target)
-
+            self.is_detouring = True
+            self.detour_target = get_offset_cell_coordinate(cur_pos, current_corridor.direction, 1)
             return self.detour(turn)
 
         return path[0] if path else None
@@ -433,7 +406,7 @@ class SearchStrategy:
 
     
         if cur_pos in self.detour_target:
-            self.detouring = False
+            self.is_detouring = False
 
         if path:
             return path[0]
@@ -442,21 +415,28 @@ class SearchStrategy:
             return None
 
 
-        # return path[0] if path else None
-
-
-        
+"""
+HELPER FUNCTIONS
+"""        
 
 CLOCKWISE_ORDER = [constants.RIGHT, constants.DOWN, constants.LEFT, constants.UP]
 COUNTERCLOCKWISE_ORDER = [constants.RIGHT, constants.UP, constants.LEFT, constants.DOWN]
 
-# split and repeat clockwise order starting from down or any other direction (function)
-# split and repeat anticlockwise order starting from down or any other direction (function)
-# get first corridor (function)
-# get next corridor (function)
 
 def next_direction(is_clockwise: bool, current_direction: int) -> int:
     order = CLOCKWISE_ORDER if is_clockwise else COUNTERCLOCKWISE_ORDER
-    # order = COUNTERCLOCKWISE_ORDER if is_clockwise else CLOCKWISE_ORDER
     idx = order.index(current_direction)
     return order[(idx + 1) % 4]
+
+
+def get_offset_cell_coordinate(cur_pos: List[int], direction: int, offset: int) -> List[int]:
+    if direction == constants.LEFT:
+        return [cur_pos[0] - offset, cur_pos[1]]
+    elif direction == constants.RIGHT:
+        return [cur_pos[0] + offset, cur_pos[1]]
+    elif direction == constants.UP:
+        return [cur_pos[0], cur_pos[1] - offset]
+    elif direction == constants.DOWN:
+        return [cur_pos[0], cur_pos[1] + offset]
+    else:
+        raise ValueError("Invalid direction")
