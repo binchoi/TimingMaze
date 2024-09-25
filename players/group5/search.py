@@ -368,11 +368,10 @@ class SearchStrategy:
 
     def create_corridors(self) -> List[Corridor]:
         boundaries = self.player_map.get_boundaries()
-        self.logger.debug(f"====boundaries: {boundaries}")
 
         prev_corridor = self.traversed_corridors[-1]
         prev_dir = prev_corridor.direction
-        # while distance from boundary edge to edge is more than 2*radius
+
         while boundaries[constants.RIGHT] - boundaries[constants.LEFT] > 2*self.radius:
             additional_corridors = {
                 constants.RIGHT if self.rotation_direction == RotationDirection.CLOCKWISE else constants.LEFT: Corridor(
@@ -417,15 +416,26 @@ class SearchStrategy:
                 self.corridors.append(additional_corridors[nxt_dir])
                 prev_dir = nxt_dir
             
-            # break
+            # adjust boundaries
             boundaries = [
                 boundaries[constants.LEFT] + self.radius * self.quick_search_multiplier,
                 boundaries[constants.UP] + self.radius * self.quick_search_multiplier,
                 boundaries[constants.RIGHT] - self.radius * self.quick_search_multiplier,
                 boundaries[constants.DOWN] - self.radius * self.quick_search_multiplier,
             ]
-            # self.logger.debug(f"boundaries: {boundaries}")
         
+        if boundaries[constants.RIGHT] - boundaries[constants.LEFT] > 0:
+            self.corridors.append(Corridor(
+                [
+                    boundaries[constants.LEFT], 
+                    boundaries[constants.UP], 
+                    boundaries[constants.RIGHT], 
+                    boundaries[constants.DOWN],
+                ],
+                constants.RIGHT,
+            ))
+
+
         self.logger.debug(f"Corridors: {self.corridors}; {len(self.corridors)}")
         for corridor in self.corridors:
             self.logger.debug(f"Corridor: {corridor.boundaries}; {corridor.direction} {corridor.start_indices=} {corridor.end_indices}->")
