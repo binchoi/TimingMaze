@@ -3,7 +3,7 @@
 import copy
 import logging
 import constants
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from players.group5.converge import dyjkstra
 from players.group5.player_map import PlayerMapInterface
@@ -94,7 +94,7 @@ class SearchStrategy:
         self.traversed_corridors: List[Corridor] = []
 
         self.is_detouring = False
-        self.detour_target = None
+        self.detour_target: Optional[List[List[int]]] = None
 
         self.search_speed_coefficient = SearchStrategy.MINIMUM_SEARCH_SPEED_COEFFICIENT
         """
@@ -319,7 +319,7 @@ class SearchStrategy:
         path = dyjkstra(cur_pos, current_corridor.end_indices, turn, corridor_map, self.max_door_frequency)
         if not path:
             self.is_detouring = True
-            self.detour_target = get_offset_cell_coordinate(cur_pos, current_corridor.direction, 1)
+            self.detour_target = [get_offset_cell_coordinate(cur_pos, current_corridor.direction, 1)]
             return self.detour(turn)
 
         return path[0] if path else None
